@@ -1,3 +1,16 @@
+#----ADDED FOR CITIBIKE------ 
+# Ignore raw Kaggle data
+data/*.csv
+data/*.parquet
+data/*.db
+data/*.zip
+models/*.pth
+models/*.h5
+*.csv
+*.parquet
+
+#----FROM GITHUB TEMPLATE-----
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
