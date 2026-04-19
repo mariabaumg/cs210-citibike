@@ -1,13 +1,16 @@
-#----ADDED FOR CITIBIKE------ 
-# Ignore raw Kaggle data
-data/*.csv
-data/*.parquet
-data/*.db
-data/*.zip
-models/*.pth
-models/*.h5
+#------CITI BIKE RULES------
+data/*
+models/*
+!data/.gitkeep
+!models/.gitkeep
+!notebooks/.gitkeep
+!src/.gitkeep
 *.csv
 *.parquet
+*.db
+*.zip
+*.pth
+*.h5
 
 #----FROM GITHUB TEMPLATE-----
 
