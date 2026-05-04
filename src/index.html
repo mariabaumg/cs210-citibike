@@ -282,14 +282,27 @@ Author: Maria (mariabaumg)
         <h2>CitiBike Forecast</h2>
         <div id="station-info" class="station-header">Select a Pin on the Map</div>
 
+        <!-- UPDATED SECTION -->
         <div class="control-group">
-            <label>Season</label>
-            <select id="seasonSelect" onchange="updateUI()">
-                <option value="Spring">Spring</option>
-                <option value="Summer">Summer</option>
-                <option value="Fall">Fall</option>
-                <option value="Winter">Winter</option>
-            </select>
+            <label>Season & Day</label>
+            <div style="display: flex; gap: 10px;">
+                <select id="seasonSelect" onchange="updateUI()">
+                    <option value="Spring">Spring</option>
+                    <option value="Summer">Summer</option>
+                    <option value="Fall">Fall</option>
+                    <option value="Winter">Winter</option>
+                </select>
+
+                <select id="daySelect" onchange="updateUI()">
+                    <option value="0">Mon</option>
+                    <option value="1">Tue</option>
+                    <option value="2">Wed</option>
+                    <option value="3">Thu</option>
+                    <option value="4">Fri</option>
+                    <option value="5">Sat</option>
+                    <option value="6">Sun</option>
+                </select>
+            </div>
         </div>
 
         <div class="control-group">
@@ -304,7 +317,7 @@ Author: Maria (mariabaumg)
             </div>
             <div class="card-content">
                 <div id="prediction" class="prediction-value">--</div>
-                <div class="unit-label">BIKES / HOUR</div>
+                <div class="unit-label">PREDICTED BIKE INFLOW</div>
             </div>
         </div>
 
@@ -362,7 +375,6 @@ Author: Maria (mariabaumg)
                     marker.on('click', (e) => {
                         activeId = id;
                         
-                        // Toggle glow class on markers
                         document.querySelectorAll('.leaflet-interactive').forEach(node => {
                             node.classList.remove('active-glow');
                         });
@@ -383,13 +395,15 @@ Author: Maria (mariabaumg)
 
         function updateUI() {
             const s = document.getElementById('seasonSelect').value;
+            const d = document.getElementById('daySelect').value; // NEW
             const h = document.getElementById('hourSlider').value;
+
             const ampm = h >= 12 ? 'PM' : 'AM';
             const displayHour = h % 12 || 12;
             document.getElementById('hourLabel').innerText = `${displayHour}:00 ${ampm}`;
 
             if (activeId && predictionData[activeId]) {
-                const val = predictionData[activeId].seasons[s]["0"][h];
+                const val = predictionData[activeId].seasons[s][d][h]; // UPDATED
                 document.getElementById('prediction').innerText = val;
             }
         }
