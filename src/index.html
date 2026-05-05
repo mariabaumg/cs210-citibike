@@ -1,0 +1,419 @@
+<!-- 
+Author: Maria (mariabaumg)
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citi Bike Predictor | NYC Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --citi-blue: #015CAB;
+            --citi-light-blue: #ADD5F5;
+            --dark-bg: #0a0a0a;
+            --dark-surface: #161616;
+            --text-main: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        #map { 
+            flex: 1; 
+            filter: invert(5%) hue-rotate(180deg) brightness(95%) contrast(100%); 
+        }
+
+        #sidebar {
+            width: 380px;
+            background: var(--dark-surface);
+            padding: 30px;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #222;
+        }
+
+        h2 { 
+            color: var(--citi-light-blue); 
+            margin-top: 0; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            font-size: 20px; 
+        }
+
+        .station-header {
+            padding: 15px;
+            background: #1e1e1e;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--citi-blue);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .control-group { margin-bottom: 25px; }
+
+        label { 
+            display: block; 
+            font-size: 11px; 
+            font-weight: 700; 
+            color: #666; 
+            margin-bottom: 8px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            background: #252525;
+            border: 1px solid #333;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        input[type="range"] { 
+            width: 100%; 
+            accent-color: var(--citi-blue); 
+            cursor: pointer; 
+        }
+
+        #hourLabel {
+            text-align: center;
+            color: var(--citi-light-blue);
+            font-weight: bold;
+            margin-top: 8px;
+            font-size: 1.1em;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, var(--citi-blue), #003b70);
+            border-radius: 16px;
+            text-align: center;
+            margin-top: auto;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            overflow: hidden; 
+        }
+
+        .marquee-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .marquee-box span {
+            display: inline-block;
+            font-size: 10px;
+            color: var(--citi-light-blue);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: marquee-scroll 12s linear infinite;
+        }
+
+        @keyframes marquee-scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .card-content {
+            padding: 20px 30px 30px 30px;
+        }
+
+        .prediction-value { 
+            font-size: 82px; 
+            font-weight: 900; 
+            color: white; 
+            line-height: 1; 
+            margin: 10px 0; 
+        }
+
+        .unit-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            opacity: 0.8;
+            color: white;
+        }
+
+        .info-trigger {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 24px;
+            height: 24px;
+            border: 1.5px solid var(--citi-light-blue);
+            border-radius: 50%;
+            color: var(--citi-light-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'serif';
+            font-style: italic;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            background: rgba(1, 92, 171, 0.1);
+        }
+
+        .info-trigger:hover {
+            background: var(--citi-light-blue);
+            color: var(--citi-blue);
+            box-shadow: 0 0 15px var(--citi-light-blue);
+        }
+
+        #model-info-card {
+            display: none; 
+            position: absolute;
+            top: 55px;
+            right: 20px;
+            width: 220px;
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(173, 213, 245, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            z-index: 1001;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .info-header {
+            font-size: 10px;
+            color: var(--citi-light-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        .info-item {
+            font-size: 11px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .info-label { color: #888; }
+        .info-val { color: #eee; font-family: monospace; }
+
+        #music-toggle {
+            margin-top: 20px;
+            padding: 12px;
+            background: #222;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            border: 1px solid #333;
+            transition: 0.3s;
+        }
+
+        #music-toggle:hover {
+            border-color: var(--citi-blue);
+            background: #2d2d2d;
+        }
+
+        .active-glow {
+            filter: drop-shadow(0 0 10px #fff) drop-shadow(0 0 20px var(--citi-blue)) !important;
+            stroke-width: 3px !important;
+            stroke: #fff !important;
+            fill-opacity: 1 !important;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div id="sidebar">
+        <div class="info-trigger" onclick="toggleInfoCard()">i</div>
+
+        <div id="model-info-card">
+            <div class="info-header">Model Architecture</div>
+            <div class="info-item">
+                <span class="info-label">Engine:</span>
+                <span class="info-val">3-Layer NN</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Optimizer:</span>
+                <span class="info-val">Adam (0.005)</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Loss:</span>
+                <span class="info-val">PoissonNLL</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Regularization:</span>
+                <span class="info-val">Grad-Clip (1.0)</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status:</span>
+                <span class="info-val" style="color: #4CAF50;">● Active</span>
+            </div>
+        </div>
+
+        <h2>CitiBike Forecast</h2>
+        <div id="station-info" class="station-header">Select a Pin on the Map</div>
+
+        <!-- UPDATED SECTION -->
+        <div class="control-group">
+            <label>Season & Day</label>
+            <div style="display: flex; gap: 10px;">
+                <select id="seasonSelect" onchange="updateUI()">
+                    <option value="Spring">Spring</option>
+                    <option value="Summer">Summer</option>
+                    <option value="Fall">Fall</option>
+                    <option value="Winter">Winter</option>
+                </select>
+
+                <select id="daySelect" onchange="updateUI()">
+                    <option value="0">Mon</option>
+                    <option value="1">Tue</option>
+                    <option value="2">Wed</option>
+                    <option value="3">Thu</option>
+                    <option value="4">Fri</option>
+                    <option value="5">Sat</option>
+                    <option value="6">Sun</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Time of Day</label>
+            <input type="range" id="hourSlider" min="0" max="23" value="12" oninput="updateUI()">
+            <div id="hourLabel">12:00 PM</div>
+        </div>
+
+        <div class="result-card">
+            <div class="marquee-box">
+                <span id="marquee-text">System Online ... Waiting for Input ... Standby ...</span>
+            </div>
+            <div class="card-content">
+                <div id="prediction" class="prediction-value">--</div>
+                <div class="unit-label">PREDICTED BIKE INFLOW</div>
+            </div>
+        </div>
+
+        <div id="music-toggle" onclick="toggleMusic()">
+            <span id="music-icon">▶</span>
+            <span style="font-size: 12px; font-weight: bold; letter-spacing: 0.5px; color: #aaa;">MUSIC</span>
+        </div>
+        
+        <audio id="bg-audio" loop>
+            <source src="satc.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let predictionData = {};
+        let activeId = null;
+        let isPlaying = false;
+
+        const map = L.map('map', { zoomControl: false }).setView([40.7306, -73.9911], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        function toggleMusic() {
+            const audio = document.getElementById('bg-audio');
+            const icon = document.getElementById('music-icon');
+            const marquee = document.getElementById('marquee-text');
+
+            if (isPlaying) {
+                audio.pause();
+                icon.innerText = '▶';
+                marquee.innerText = "System Online ... Audio Paused ... Neural Network is Thinking ...";
+            } else {
+                audio.play();
+                icon.innerText = '⏸';
+                marquee.innerText = "Now Playing: SATC Theme ... Predicting Real-Time NYC Bike Inflow ...";
+            }
+            isPlaying = !isPlaying;
+        }
+
+        async function init() {
+            try {
+                const resp = await fetch('predictions2.json');
+                predictionData = await resp.json();
+
+                Object.keys(predictionData).forEach(id => {
+                    const s = predictionData[id];
+                    const marker = L.circleMarker([s.lat, s.lon], {
+                        radius: 4,
+                        fillColor: "#015CAB",
+                        color: "#ADD5F5",
+                        weight: 1,
+                        fillOpacity: 0.8
+                    }).addTo(map);
+
+                    marker.on('click', (e) => {
+                        activeId = id;
+                        
+                        document.querySelectorAll('.leaflet-interactive').forEach(node => {
+                            node.classList.remove('active-glow');
+                        });
+                        e.target.getElement().classList.add('active-glow');
+
+                        map.flyTo([s.lat, s.lon], 15, { animate: true, duration: 1.5 });
+
+                        document.getElementById('station-info').innerText = `Station: ${id}`;
+                        updateUI();
+                        
+                        if (!isPlaying) toggleMusic();
+                    });
+                });
+            } catch (err) {
+                console.error("Data Load Error:", err);
+            }
+        }
+
+        function updateUI() {
+            const s = document.getElementById('seasonSelect').value;
+            const d = document.getElementById('daySelect').value; // NEW
+            const h = document.getElementById('hourSlider').value;
+
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const displayHour = h % 12 || 12;
+            document.getElementById('hourLabel').innerText = `${displayHour}:00 ${ampm}`;
+
+            if (activeId && predictionData[activeId]) {
+                const val = predictionData[activeId].seasons[s][d][h]; // UPDATED
+                document.getElementById('prediction').innerText = val;
+            }
+        }
+
+        function toggleInfoCard() {
+            const card = document.getElementById('model-info-card');
+            card.style.display = (card.style.display === 'none' || card.style.display === '') ? 'block' : 'none';
+        }
+
+        init();
+    </script>
+</body>
+</html>
