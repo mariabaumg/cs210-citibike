@@ -2,7 +2,7 @@
 ## **Goal**
 This project focuses on analyzing Citibike usage in New York City throughout the year. 
 The goal was to find in what areas or what stations were being utilized the most and to cluster similarly behaved stations. 
-Furthermore, the final goal was to create a model that shows predicted value of bike inflow at a specific station during specific season and day. Our ultimate output includes an interactive map that allows the user to select a station and view the predicted inflow of CitiBikes depending on season and day. The dataset that we utilized was from a credible source, Kaggle, that has multiple verifiable datasets. We utilized https://www.kaggle.com/datasets/leonczarlinski/citi-bike-nyc?select=202202-citibike-tripdata.csv
+Furthermore, the final goal was to create a model that shows predicted value of bike inflow at a specific station during specific season, day, and time. Our ultimate output includes an interactive map that allows the user to select a station and view the predicted inflow of CitiBikes depending on season and day. The dataset that we utilized was from a credible source, Kaggle, that has multiple verifiable datasets. We utilized https://www.kaggle.com/datasets/leonczarlinski/citi-bike-nyc?select=202202-citibike-tripdata.csv
 
 ## **Execution**
 
@@ -12,5 +12,6 @@ To execute the Kmeans and Clustering data outputs, they can be run normally thro
 
 For the model to run, since it is using large amounts of data, it took around 40 minutes to fully execute. To execute this model, first run through model_training.ipynb then move the processed json into the src folder, then either deploy website on gitpages or run "python -m http.server 8000" and go to http://localhost:8000 to run locally on the device. 
 
+Here is a link to view the final model as well! mariabaumg.github.io/cs210-citibike/src/
 ## **Authors**
 Manasvini, Maggie, & Maria
